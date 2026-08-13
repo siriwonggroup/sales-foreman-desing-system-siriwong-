@@ -144,13 +144,20 @@
       cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80"
     };
 
-    const SAMPLE_PDF_DATA_URI = "data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvQ291bnQgMSAvS2lkcyBbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA0IDAgUj4+CmVuZG9iago4IDAgb2JqCjw8L0xlbmd0aCA1Mj4+CnN0cmVhbQpCVCAvRjEgMjQgVGYgMTAwIDcwMCBUZCAoU2FtcGxlIFBSRiBEb2N1bWVudCAtIFdvcmtmbG93IFN5c3RlbSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==";
+    const SAMPLE_PDF_DATA_URI = "data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvQ291bnQgMSAvS2lkcyBbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA0IDAgUj4+CmVuZG9iago8IDAgb2JqCjw8L0xlbmd0aCA1Mj4+CnN0cmVhbQpCVCAvRjEgMjQgVGYgMTAwIDcwMCBUZCAoU2FtcGxlIFBSRiBEb2N1bWVudCAtIFdvcmtmbG93IFN5c3RlbSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==";
 
-    const USERS = [
+    const INITIAL_USERS = [
       { id: 'usr_mgr', username: 'manager', password: '123', name: 'คุณอนันต์ (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
       { id: 'usr_sales', username: 'sales', password: '123', name: 'คุณนิภา (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
       { id: 'usr_designer', username: 'designer', password: '123', name: 'คุณกิตติ (สถาปนิก/ออกแบบ)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
       { id: 'usr_foreman', username: 'foreman', password: '123', name: 'คุณวิชัย (โฟร์แมน)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' }
+    ];
+
+    const ROLE_OPTIONS = [
+      { role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑' },
+      { role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼' },
+      { role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨' },
+      { role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷' }
     ];
 
     const INITIAL_CONTRACTOR_TEAMS = [
@@ -172,7 +179,8 @@
         can_manage_roles: true,
         can_manage_contractors: true,
         can_audit_project: true,
-        can_reject_job: true
+        can_reject_job: true,
+        can_manage_users: true
       },
       sales: {
         can_create_project: true,
@@ -185,7 +193,8 @@
         can_manage_roles: false,
         can_manage_contractors: false,
         can_audit_project: false,
-        can_reject_job: false
+        can_reject_job: false,
+        can_manage_users: false
       },
       designer: {
         can_create_project: false,
@@ -198,7 +207,8 @@
         can_manage_roles: false,
         can_manage_contractors: false,
         can_audit_project: false,
-        can_reject_job: true
+        can_reject_job: true,
+        can_manage_users: false
       },
       foreman: {
         can_create_project: false,
@@ -211,7 +221,8 @@
         can_manage_roles: false,
         can_manage_contractors: false,
         can_audit_project: false,
-        can_reject_job: true
+        can_reject_job: true,
+        can_manage_users: false
       }
     };
 
@@ -324,40 +335,6 @@
         ]
       },
       {
-        id: 'PRJ-2026-003',
-        title: 'สร้างโชว์รูมสินค้าเครื่องใช้ไฟฟ้า บางนา',
-        clientName: 'บริษัท สยามเทค มาร์เก็ตติ้ง จำกัด',
-        clientPhone: '02-744-1122',
-        location: 'ถนนบางนา-ตราด กม. 4',
-        budget: 4500000,
-        stage: 'manager_audit',
-        createdDate: '2026-08-12',
-        startDate: '2026-09-01',
-        targetDate: '2026-12-25',
-        salesPerson: 'คุณนิภา (Sales)',
-        designerPerson: 'คุณกิตติ (Designer)',
-        foremanPerson: 'คุณวิชัย (Foreman)',
-        assignedTeams: ['ทีมช่างปูน & กระเบื้อง (ช่างบุญมี)'],
-        description: 'งานสร้างโชว์รูมและส่วนสำนักงาน 2 ชั้น รับเรื่องจากฝ่ายจัดซื้อสยามเทค ผู้จัดการกำลังตรวจสอบสเปก',
-        attachments: [
-          {
-            id: 'att_20',
-            fileName: 'เอกสารข้อกำหนดคุณลักษณะ_TOR_Siamtech.pdf',
-            fileType: 'pdf',
-            fileCategory: '01_Sales_Contract',
-            folderCategory: '01_Sales',
-            uploadedBy: 'คุณนิภา (Sales)',
-            uploadDate: '2026-08-12 11:00',
-            url: SAMPLE_PDF_DATA_URI,
-            size: '2.1 MB'
-          }
-        ],
-        logs: [
-          { id: 'log_20', author: 'คุณนิภา (Sales)', text: 'เปิดใบรับงาน สยามเทค', timestamp: '2026-08-12 11:00' },
-          { id: 'log_21', author: 'คุณกิตติ (Designer)', text: 'ส่งมอบแบบ 3D ให้ผู้จัดการตรวจสอบสเปกก่อนส่งช่าง', timestamp: '2026-08-13 14:00' }
-        ]
-      },
-      {
         id: 'PRJ-2026-004',
         title: 'ตกแต่งคาเฟ่ Minimal Craft Coffee',
         clientName: 'คุณปรีชา มงคล',
@@ -431,6 +408,12 @@
     ];
 
     function App() {
+      // Dynamic Users State with LocalStorage Persistence
+      const [usersList, setUsersList] = useState(() => {
+        const saved = localStorage.getItem('system_users');
+        return saved ? JSON.parse(saved) : INITIAL_USERS;
+      });
+
       const [currentUser, setCurrentUser] = useState(null);
       const [loginUsername, setLoginUsername] = useState('manager');
       const [loginPassword, setLoginPassword] = useState('123');
@@ -441,7 +424,7 @@
       const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS);
       const [projects, setProjects] = useState(INITIAL_PROJECTS);
       const [contractorTeams, setContractorTeams] = useState(INITIAL_CONTRACTOR_TEAMS);
-      const [viewMode, setViewMode] = useState('kanban'); // 'kanban', 'table', 'calendar'
+      const [viewMode, setViewMode] = useState('kanban');
       const [searchQuery, setSearchQuery] = useState('');
       const [filterStage, setFilterStage] = useState('all');
 
@@ -456,9 +439,17 @@
       const [previewFile, setPreviewFile] = useState(null);
       const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
       const [isRoleManagerOpen, setIsRoleManagerOpen] = useState(false);
+      const [isUserManagerOpen, setIsUserManagerOpen] = useState(false);
       const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
       const [advanceStageTarget, setAdvanceStageTarget] = useState(null);
       const [rejectModalTarget, setRejectModalTarget] = useState(null);
+
+      // Edit User Form State
+      const [editingUser, setEditingUser] = useState(null);
+
+      useEffect(() => {
+        localStorage.setItem('system_users', JSON.stringify(usersList));
+      }, [usersList]);
 
       useEffect(() => {
         if (isDarkMode) {
@@ -479,18 +470,18 @@
         if (window.lucide) {
           window.lucide.createIcons();
         }
-      }, [currentUser, projects, contractorTeams, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isNewProjectModalOpen, isAddTeamModalOpen, advanceStageTarget, rejectModalTarget]);
+      }, [currentUser, usersList, projects, contractorTeams, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, advanceStageTarget, rejectModalTarget, editingUser]);
 
       const handleLogin = (e) => {
         e.preventDefault();
         setLoginError('');
-        const found = USERS.find(u => u.username.toLowerCase() === loginUsername.toLowerCase());
+        const found = usersList.find(u => u.username.toLowerCase() === loginUsername.toLowerCase());
         if (!found) {
           setLoginError('ไม่พบชื่อผู้ใช้งานนี้ในระบบ');
           return;
         }
-        if (found.password !== loginPassword && loginPassword !== '123') {
-          setLoginError('รหัสผ่านไม่ถูกต้อง (รหัสทดสอบ: 123)');
+        if (found.password !== loginPassword) {
+          setLoginError('รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
           return;
         }
         setCurrentUser(found);
@@ -499,6 +490,34 @@
       const handleLogout = () => {
         setCurrentUser(null);
         setLoginPassword('123');
+      };
+
+      const handleSaveUser = (userData) => {
+        if (editingUser) {
+          // Update existing user
+          setUsersList(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...userData } : u));
+        } else {
+          // Add new user
+          const roleObj = ROLE_OPTIONS.find(r => r.role === userData.role);
+          const newUser = {
+            id: 'usr_' + Date.now(),
+            avatar: roleObj ? roleObj.avatar : '👤',
+            roleName: roleObj ? roleObj.roleName : 'ผู้ใช้งานระบบ',
+            ...userData
+          };
+          setUsersList(prev => [...prev, newUser]);
+        }
+        setEditingUser(null);
+      };
+
+      const handleDeleteUser = (userId) => {
+        if (usersList.length <= 1) {
+          alert('ไม่สามารถลบผู้ใช้งานทั้งหมดได้ ต้องมีผู้ใช้งานอย่างน้อย 1 คน');
+          return;
+        }
+        if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานนี้ออกจากระบบ?')) {
+          setUsersList(prev => prev.filter(u => u.id !== userId));
+        }
       };
 
       const handleAddContractorTeam = (teamName, teamType) => {
@@ -630,7 +649,6 @@
         }
       };
 
-      // Export Master Table to CSV
       const exportTableToCSV = () => {
         let csvContent = "data:text/csv;charset=utf-8,";
         csvContent += "รหัสโครงการ,ชื่อโครงการ,ลูกค้า,เบอร์โทร,สถานที่,งบประมาณ,สถานะ,เซลล์,นักออกแบบ,โฟร์แมน,ทีมช่าง\n";
@@ -662,15 +680,15 @@
               </div>
 
               <div className="mb-5">
-                <label className="block text-xs font-semibold text-slate-400 mb-2">เลือกบัญชีตัวอย่างเพื่อทดสอบระบบ:</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {USERS.map(u => (
+                <label className="block text-xs font-semibold text-slate-400 mb-2">เลือกบัญชีผู้ใช้ในระบบเพื่อเข้าใช้งาน:</label>
+                <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
+                  {usersList.map(u => (
                     <button
                       key={u.id}
                       type="button"
                       onClick={() => {
                         setLoginUsername(u.username);
-                        setLoginPassword('123');
+                        setLoginPassword(u.password || '123');
                         setLoginError('');
                       }}
                       className={`p-2.5 rounded-xl border text-left flex items-center space-x-2 transition ${
@@ -679,10 +697,10 @@
                           : 'bg-slate-700/60 border-slate-600 text-slate-300 hover:bg-slate-700'
                       }`}
                     >
-                      <span className="text-xl">{u.avatar}</span>
+                      <span className="text-xl">{u.avatar || '👤'}</span>
                       <div className="overflow-hidden">
                         <p className="text-xs font-bold truncate">{u.name}</p>
-                        <p className="text-[10px] text-slate-400 truncate">({u.role.toUpperCase()})</p>
+                        <p className="text-[10px] text-slate-400 truncate">({u.username})</p>
                       </div>
                     </button>
                   ))}
@@ -726,7 +744,6 @@
                       <i data-lucide={showPassword ? "eye-off" : "eye"} className="w-4 h-4"></i>
                     </button>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-1">รหัสผ่านบัญชีตัวอย่างทุกบัญชีคือ: <strong className="text-sky-400">123</strong></p>
                 </div>
 
                 <button
@@ -785,6 +802,13 @@
 
                 {currentUser.role === 'manager' && (
                   <>
+                    <button
+                      onClick={() => setIsUserManagerOpen(true)}
+                      className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-xs font-semibold"
+                    >
+                      <i data-lucide="user-plus" className="w-4 h-4"></i>
+                      <span className="hidden sm:inline">👤 จัดการผู้ใช้งาน/รหัสผ่าน</span>
+                    </button>
                     <button
                       onClick={() => setIsAddTeamModalOpen(true)}
                       className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold"
@@ -1112,11 +1136,10 @@
               </div>
             )}
 
-            {/* VIEW 2: MASTER TABLE DIRECTORY (ตารางรวมทุกสถานะหน้างาน - Comprehensive Master Table View) */}
+            {/* VIEW 2: MASTER TABLE DIRECTORY */}
             {viewMode === 'table' && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-4">
                 
-                {/* Table Header Bar */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
                   <div>
                     <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center">
@@ -1135,7 +1158,6 @@
                   </button>
                 </div>
 
-                {/* Master Table */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
@@ -1277,6 +1299,136 @@
             )}
 
           </main>
+
+          {/* DYNAMIC USER MANAGEMENT MODAL (Manager Only) */}
+          {isUserManagerOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800">
+                <div className="bg-sky-700 text-white p-6 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold flex items-center">
+                      <i data-lucide="user-cog" className="w-6 h-6 mr-2"></i>
+                      จัดการผู้ใช้งานและกำหนดรหัสผ่าน (User & Password Management)
+                    </h2>
+                    <p className="text-xs text-sky-100 mt-1">ผู้จัดการสามารถเพิ่มผู้ใช้งานใหม่ แก้ไขชื่อ ตำแหน่ง และตั้งรหัสผ่านสำหรับเข้าระบบได้ตามต้องการ</p>
+                  </div>
+                  <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); }} className="text-sky-200 hover:text-white">
+                    <i data-lucide="x" className="w-6 h-6"></i>
+                  </button>
+                </div>
+
+                <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
+                  
+                  {/* Form to Add or Edit User */}
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.target);
+                    const userData = {
+                      name: fd.get('name'),
+                      username: fd.get('username'),
+                      password: fd.get('password'),
+                      role: fd.get('role')
+                    };
+                    handleSaveUser(userData);
+                    e.target.reset();
+                  }} className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
+                    <h3 className="font-bold text-sm text-slate-800 dark:text-white flex items-center">
+                      <i data-lucide={editingUser ? "edit-3" : "user-plus"} className="w-4 h-4 mr-1.5 text-sky-600"></i>
+                      {editingUser ? `แก้ไขข้อมูลผู้ใช้: ${editingUser.name}` : '+ เพิ่มผู้ใช้งานและตั้งรหัสผ่านใหม่'}
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ชื่อ-นามสกุล *</label>
+                        <input name="name" defaultValue={editingUser ? editingUser.name : ''} required placeholder="เช่น คุณสมศักดิ์ (โฟร์แมน)" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ชื่อเข้าใช้งาน (Username) *</label>
+                        <input name="username" defaultValue={editingUser ? editingUser.username : ''} required placeholder="เช่น somsak" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm dark:text-white" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">รหัสผ่านสำหรับเข้าใช้งาน (Password) *</label>
+                        <input name="password" type="text" defaultValue={editingUser ? editingUser.password : ''} required placeholder="ระบุรหัสผ่าน..." className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm dark:text-white font-mono" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ตำแหน่ง / บทบาท (Role) *</label>
+                        <select name="role" defaultValue={editingUser ? editingUser.role : 'sales'} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm dark:text-white font-semibold">
+                          <option value="sales">💼 เซลล์ (Sales)</option>
+                          <option value="designer">🎨 ฝ่ายออกแบบ (Designer)</option>
+                          <option value="foreman">👷 โฟร์แมน (Foreman)</option>
+                          <option value="manager">👑 ผู้จัดการ (Manager)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2 pt-2">
+                      {editingUser && (
+                        <button type="button" onClick={() => setEditingUser(null)} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl">
+                          ยกเลิกการแก้ไข
+                        </button>
+                      )}
+                      <button type="submit" className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs">
+                        {editingUser ? 'บันทึกการแก้ไข' : 'บันทึกผู้ใช้ใหม่'}
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Users Table */}
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-800 dark:text-white mb-3">รายชื่อผู้ใช้งานทั้งหมดในระบบ ({usersList.length} คน)</h3>
+                    <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase">
+                            <th className="py-2.5 px-3">ผู้ใช้งาน</th>
+                            <th className="py-2.5 px-3">Username</th>
+                            <th className="py-2.5 px-3">รหัสผ่าน</th>
+                            <th className="py-2.5 px-3">ตำแหน่ง</th>
+                            <th className="py-2.5 px-3 text-right">จัดการ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                          {usersList.map(u => (
+                            <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                              <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200 flex items-center">
+                                <span className="text-base mr-2">{u.avatar || '👤'}</span> {u.name}
+                              </td>
+                              <td className="py-2.5 px-3 font-mono text-sky-600 dark:text-sky-400 font-semibold">{u.username}</td>
+                              <td className="py-2.5 px-3 font-mono font-bold text-amber-600 dark:text-amber-400">{u.password || '123'}</td>
+                              <td className="py-2.5 px-3">
+                                <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded font-semibold text-[11px]">
+                                  {u.roleName || u.role}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 text-right space-x-2">
+                                <button onClick={() => setEditingUser(u)} className="px-2 py-1 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 rounded font-semibold text-[11px]">
+                                  แก้ไข
+                                </button>
+                                <button onClick={() => handleDeleteUser(u.id)} className="px-2 py-1 bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 rounded font-semibold text-[11px]">
+                                  ลบ
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                  <span className="text-xs text-sky-700 dark:text-sky-400 font-semibold">✓ บันทึกข้อมูลและรหัสผ่านเรียบร้อย</span>
+                  <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); }} className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm">
+                    ตกลง / ปิดหน้าต่าง
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* PROJECT DETAIL MODAL */}
           {selectedProject && (
