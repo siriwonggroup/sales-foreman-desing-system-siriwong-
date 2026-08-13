@@ -144,7 +144,7 @@
       cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80"
     };
 
-    const SAMPLE_PDF_DATA_URI = "data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvQ291bnQgMSAvS2lkcyBbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA0IDAgUj4+CmVuZG9iago8IDAgb2JqCjw8L0xlbmd0aCA1Mj4+CnN0cmVhbQpCVCAvRjEgMjQgVGYgMTAwIDcwMCBUZCAoU2FtcGxlIFBSRiBEb2N1bWVudCAtIFdvcmtmbG93IFN5c3RlbSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==";
+    const SAMPLE_PDF_DATA_URI = "data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvQ291bnQgMSAvS2lkcyBbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA0IDAgUj4+CmVuZG9iago4IDAgb2JqCjw8L0xlbmd0aCA1Mj4+CnN0cmVhbQpCVCAvRjEgMjQgVGYgMTAwIDcwMCBUZCAoU2FtcGxlIFBSRiBEb2N1bWVudCAtIFdvcmtmbG93IFN5c3RlbSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==";
 
     const INITIAL_USERS = [
       { id: 'usr_mgr', username: 'manager', password: '123', name: 'คุณอนันต์ (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
@@ -494,10 +494,8 @@
 
       const handleSaveUser = (userData) => {
         if (editingUser) {
-          // Update existing user
           setUsersList(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...userData } : u));
         } else {
-          // Add new user
           const roleObj = ROLE_OPTIONS.find(r => r.role === userData.role);
           const newUser = {
             id: 'usr_' + Date.now(),
@@ -680,7 +678,17 @@
               </div>
 
               <div className="mb-5">
-                <label className="block text-xs font-semibold text-slate-400 mb-2">เลือกบัญชีผู้ใช้ในระบบเพื่อเข้าใช้งาน:</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-xs font-semibold text-slate-400">เลือกบัญชีผู้ใช้ในระบบเพื่อเข้าใช้งาน:</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsUserManagerOpen(true)}
+                    className="text-[11px] font-bold text-sky-400 hover:underline flex items-center"
+                  >
+                    <i data-lucide="user-plus" className="w-3.5 h-3.5 mr-1"></i>
+                    + เพิ่ม/แก้ไขผู้ใช้
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
                   {usersList.map(u => (
                     <button
@@ -779,7 +787,7 @@
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
@@ -800,28 +808,30 @@
                   </button>
                 </div>
 
+                {/* USER MANAGEMENT BUTTON - ALWAYS VISIBLE IN NAVBAR */}
+                <button
+                  onClick={() => setIsUserManagerOpen(true)}
+                  className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs border border-sky-500"
+                >
+                  <i data-lucide="user-plus" className="w-4 h-4"></i>
+                  <span>👤 จัดการผู้ใช้งาน/รหัสผ่าน</span>
+                </button>
+
                 {currentUser.role === 'manager' && (
                   <>
-                    <button
-                      onClick={() => setIsUserManagerOpen(true)}
-                      className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-xs font-semibold"
-                    >
-                      <i data-lucide="user-plus" className="w-4 h-4"></i>
-                      <span className="hidden sm:inline">👤 จัดการผู้ใช้งาน/รหัสผ่าน</span>
-                    </button>
                     <button
                       onClick={() => setIsAddTeamModalOpen(true)}
                       className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-semibold"
                     >
                       <i data-lucide="users" className="w-4 h-4"></i>
-                      <span className="hidden sm:inline">+ ทีมช่าง</span>
+                      <span>+ ทีมช่าง</span>
                     </button>
                     <button
                       onClick={() => setIsRoleManagerOpen(true)}
                       className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold"
                     >
                       <i data-lucide="shield-alert" className="w-4 h-4"></i>
-                      <span className="hidden sm:inline">กำหนดสิทธิ์</span>
+                      <span>กำหนดสิทธิ์</span>
                     </button>
                   </>
                 )}
@@ -833,7 +843,7 @@
                   }}
                   className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xs transition ${
                     userCan('can_create_project')
-                      ? 'bg-sky-600 hover:bg-sky-700 text-white'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                       : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                   }`}
                 >
@@ -1300,7 +1310,7 @@
 
           </main>
 
-          {/* DYNAMIC USER MANAGEMENT MODAL (Manager Only) */}
+          {/* DYNAMIC USER MANAGEMENT MODAL */}
           {isUserManagerOpen && (
             <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
               <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800">
@@ -1310,7 +1320,7 @@
                       <i data-lucide="user-cog" className="w-6 h-6 mr-2"></i>
                       จัดการผู้ใช้งานและกำหนดรหัสผ่าน (User & Password Management)
                     </h2>
-                    <p className="text-xs text-sky-100 mt-1">ผู้จัดการสามารถเพิ่มผู้ใช้งานใหม่ แก้ไขชื่อ ตำแหน่ง และตั้งรหัสผ่านสำหรับเข้าระบบได้ตามต้องการ</p>
+                    <p className="text-xs text-sky-100 mt-1">สามารถเพิ่มผู้ใช้งานใหม่ แก้ไขชื่อ ตำแหน่ง และตั้งรหัสผ่านสำหรับเข้าระบบได้ตามต้องการ</p>
                   </div>
                   <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); }} className="text-sky-200 hover:text-white">
                     <i data-lucide="x" className="w-6 h-6"></i>
@@ -1319,7 +1329,6 @@
 
                 <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
                   
-                  {/* Form to Add or Edit User */}
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     const fd = new FormData(e.target);
@@ -1376,7 +1385,6 @@
                     </div>
                   </form>
 
-                  {/* Users Table */}
                   <div>
                     <h3 className="font-bold text-sm text-slate-800 dark:text-white mb-3">รายชื่อผู้ใช้งานทั้งหมดในระบบ ({usersList.length} คน)</h3>
                     <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
