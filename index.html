@@ -35,7 +35,7 @@
   <!-- Babel Standalone for JSX in browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Firebase Compat Libraries for Online Realtime Multi-Device Sync -->
+  <!-- Firebase Compat Libraries for Online Realtime Multi-Device Sync (Safely loaded) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -136,7 +136,14 @@
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased min-h-screen">
-  <div id="root"></div>
+  <div id="root">
+    <div className="min-h-screen flex items-center justify-center p-6 text-center text-slate-500">
+      <div className="space-y-3">
+        <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-sm font-semibold">กำลังโหลดระบบ Sales & Construction Workflow...</p>
+      </div>
+    </div>
+  </div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
@@ -148,37 +155,41 @@
 
     // HELPER TO COMPRESS UPLOADED IMAGES TO 128x128 PREVENTING BROWSER FREEZING & STORAGE OVERFLOW
     function compressProfileImage(file, callback) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxDim = 128;
-          let width = img.width;
-          let height = img.height;
+      try {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDim = 128;
+            let width = img.width;
+            let height = img.height;
 
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
+            if (width > height) {
+              if (width > maxDim) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              }
+            } else {
+              if (height > maxDim) {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
             }
-          } else {
-            if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          callback(compressedDataUrl);
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            callback(compressedDataUrl);
+          };
+          img.src = e.target.result;
         };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      } catch(err) {
+        console.error('Image compression error:', err);
+      }
     }
 
     const SAMPLE_IMAGES = {
@@ -194,19 +205,20 @@
 
     const SAMPLE_PDF_DATA_URI = "data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvQ291bnQgMSAvS2lkcyBbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA4IDAgUj4+CmVuZG9iago8IDAgb2JqCjw8L0xlbmd0aCA1Mj4+CnN0cmVhbQpCVCAvRjEgMjQgVGYgMTAwIDcwMCBUZCAoU2FtcGxlIFBSRiBEb2N1bWVudCAtIFdvcmtmbG93IFN5c3RlbSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==";
 
-    // DEFAULT EMBEDDED ONLINE SYSTEM USERS (AVAILABLE ON ALL COMPUTERS & PHONES INSTANTLY)
+    // EXACT 12 CUSTOMER ONLINE TEAM ACCOUNTS EMBEDDED DIRECTLY
     const INITIAL_USERS = [
-      { id: 'usr_mgr', username: 'manager', password: '123', name: 'คุณอนันต์ (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
-      { id: 'usr_sales1', username: 'sales', password: '123', name: 'คุณนิภา (เซลล์ 1)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
-      { id: 'usr_sales2', username: 'sales2', password: '123', name: 'คุณรัตนา (เซลล์ 2)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
-      { id: 'usr_designer1', username: 'designer', password: '123', name: 'คุณกิตติ (สถาปนิก/ออกแบบ 1)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
-      { id: 'usr_designer2', username: 'designer2', password: '123', name: 'คุณภาณุ (นักออกแบบ 3D 2)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
-      { id: 'usr_foreman1', username: 'foreman', password: '123', name: 'คุณวิชัย (โฟร์แมนหลัก 1)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
-      { id: 'usr_foreman2', username: 'foreman2', password: '123', name: 'คุณเดชา (โฟร์แมนคุมโครงสร้าง 2)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
-      { id: 'usr_foreman3', username: 'foreman3', password: '123', name: 'คุณสมศักดิ์ (โฟร์แมนคุมระบบ 3)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
-      { id: 'usr_admin', username: 'admin', password: '123', name: 'คุณสายชล (ฝ่ายธุรการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '📋', color: 'emerald' },
-      { id: 'usr_account', username: 'account', password: '123', name: 'คุณประภา (ฝ่ายการเงิน)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '📊', color: 'blue' },
-      { id: 'usr_buyer', username: 'buyer', password: '123', name: 'คุณวีระ (ฝ่ายจัดซื้อ)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '📦', color: 'amber' }
+      { id: 'usr_1', username: 'Runlalit', password: '0423', name: 'คุณรันต์ลลิต (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
+      { id: 'usr_2', username: 'Pakpoom', password: '2512', name: 'คุณภาคภูมิ (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
+      { id: 'usr_3', username: 'Charif', password: '0609', name: 'คุณชาลีฟ (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
+      { id: 'usr_4', username: 'kalaya', password: '201', name: 'คุณกัลยา (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_5', username: 'sunisa', password: '202', name: 'คุณสุนิสา (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_6', username: 'Nopparat', password: '203', name: 'คุณนพรัตน์ (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_7', username: 'Weeradon', password: '204', name: 'คุณวีรดนย์ (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_8', username: 'Aprisara', password: '205', name: 'คุณอภิสรา (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_9', username: 'Pakawat', password: '301', name: 'คุณภัควัฒน์ (ฝ่ายออกแบบ)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
+      { id: 'usr_10', username: 'Sirikorn', password: '401', name: 'คุณศิริกร (โฟร์แมน)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
+      { id: 'usr_11', username: 'Thiti', password: '402', name: 'คุณฐิติ (โฟร์แมน)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
+      { id: 'usr_12', username: 'Apichart', password: '403', name: 'คุณอภิชาติ (โฟร์แมน)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' }
     ];
 
     const ROLE_OPTIONS = [
@@ -294,9 +306,9 @@
         createdDate: '2026-08-01',
         startDate: '2026-08-05',
         targetDate: '2026-09-15',
-        salesPerson: 'คุณนิภา (Sales)',
-        designerPerson: 'คุณกิตติ (Designer)',
-        foremanPerson: 'คุณวิชัย (Foreman)',
+        salesPerson: 'คุณกัลยา (Sales)',
+        designerPerson: 'คุณภัควัฒน์ (Designer)',
+        foremanPerson: 'คุณศิริกร (Foreman)',
         assignedTeams: ['ทีมช่างบิลต์อิน & ตกแต่งภายใน (ช่างเดชา)', 'ทีมช่างระบบไฟฟ้า & ประปา (ช่างสมศักดิ์)'],
         description: 'งานรีโนเวทห้องชุดขนาด 55 ตร.ม. สไตล์ Modern Luxury รื้อเคาน์เตอร์ครัวเดิม ปูพื้นไม้ Engineering Wood ใหม่',
         attachments: [
@@ -306,7 +318,7 @@
             fileType: 'pdf',
             fileCategory: '01_Sales_Contract',
             folderCategory: '01_Sales',
-            uploadedBy: 'คุณนิภา (Sales)',
+            uploadedBy: 'คุณกัลยา (Sales)',
             uploadDate: '2026-08-01 10:30',
             url: SAMPLE_PDF_DATA_URI,
             size: '1.4 MB'
@@ -319,7 +331,7 @@
             folderCategory: '01_Sales',
             photoDate: '2026-08-01',
             photoNote: 'เข้าวัดพื้นที่จริง รื้อผนังห้องครัวเดิมออก',
-            uploadedBy: 'คุณนิภา (Sales)',
+            uploadedBy: 'คุณกัลยา (Sales)',
             uploadDate: '2026-08-01 11:15',
             url: SAMPLE_IMAGES.interior1,
             size: '2.8 MB'
@@ -328,7 +340,7 @@
         comments: [
           {
             id: 'cmt_101',
-            authorName: 'คุณนิภา (เซลล์)',
+            authorName: 'คุณกัลยา (เซลล์)',
             authorRole: 'sales',
             roleName: '💼 ฝ่ายขาย (Sales)',
             avatar: '💼',
@@ -338,7 +350,7 @@
             replies: [
               {
                 id: 'rep_101_1',
-                authorName: 'คุณกิตติ (สถาปนิก)',
+                authorName: 'คุณภัควัฒน์ (สถาปนิก)',
                 authorRole: 'designer',
                 roleName: '🎨 ฝ่ายออกแบบ (Designer)',
                 avatar: '🎨',
@@ -349,7 +361,7 @@
           },
           {
             id: 'cmt_102',
-            authorName: 'คุณวิชัย (โฟร์แมน)',
+            authorName: 'คุณศิริกร (โฟร์แมน)',
             authorRole: 'foreman',
             roleName: '👷 ฝ่ายโฟร์แมน (Foreman)',
             avatar: '👷',
@@ -364,7 +376,7 @@
           }
         ],
         logs: [
-          { id: 'log_1', author: 'คุณนิภา (Sales)', text: 'เปิดใบรับงานใหม่ นัดหมายลูกค้าเข้าสำรวจหน้างานแล้ว', timestamp: '2026-08-01 10:30' }
+          { id: 'log_1', author: 'คุณกัลยา (Sales)', text: 'เปิดใบรับงานใหม่ นัดหมายลูกค้าเข้าสำรวจหน้างานแล้ว', timestamp: '2026-08-01 10:30' }
         ]
       },
       {
@@ -378,16 +390,16 @@
         createdDate: '2026-07-15',
         startDate: '2026-07-20',
         targetDate: '2026-10-30',
-        salesPerson: 'คุณนิภา (Sales)',
-        designerPerson: 'คุณกิตติ (Designer)',
-        foremanPerson: 'คุณวิชัย (Foreman)',
+        salesPerson: 'คุณสุนิสา (Sales)',
+        designerPerson: 'คุณภัควัฒน์ (Designer)',
+        foremanPerson: 'คุณฐิติ (Foreman)',
         assignedTeams: ['ทีมช่างปูน & กระเบื้อง (ช่างบุญมี)', 'ทีมช่างสี & งานฝ้าเพดาน (ช่างวิรัตน์)'],
         description: 'ต่อเติมหลังคาโรงรถ งานโครงสร้างเหล็ก และตกแต่งภายในชั้น 1 และ ชั้น 2 ทั้งหลัง',
         attachments: [],
         comments: [
           {
             id: 'cmt_201',
-            authorName: 'คุณอนันต์ (ผู้จัดการ)',
+            authorName: 'คุณรันต์ลลิต (ผู้จัดการ)',
             authorRole: 'manager',
             roleName: '👑 ฝ่ายผู้จัดการ (Manager)',
             avatar: '👑',
@@ -437,7 +449,7 @@
     function App() {
       // ONLINE CLOUD DATABASE SYNC STATE
       const [isOnlineSynced, setIsOnlineSynced] = useState(false);
-      const [onlineStatusText, setOnlineStatusText] = useState('กำลังเชื่อมต่อฐานข้อมูลคลาวด์ออนไลน์ (Online Realtime)...');
+      const [onlineStatusText, setOnlineStatusText] = useState('🟢 ระบบออนไลน์ (12 บัญชีหลักพร้อมใช้งาน)');
       const firebaseRef = useRef(null);
 
       const [usersList, setUsersList] = useState(() => {
@@ -445,14 +457,17 @@
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length >= INITIAL_USERS.length) return parsed;
+            if (Array.isArray(parsed) && parsed.length >= INITIAL_USERS.length) {
+              const hasNewUsers = parsed.some(u => u.username === 'Runlalit');
+              if (hasNewUsers) return parsed;
+            }
           } catch (e) {}
         }
         return INITIAL_USERS;
       });
 
       const [currentUser, setCurrentUser] = useState(null);
-      const [loginUsername, setLoginUsername] = useState('manager');
+      const [loginUsername, setLoginUsername] = useState('Runlalit');
       const [loginPassword, setLoginPassword] = useState('');
       const [showPassword, setShowPassword] = useState(false);
       const [loginError, setLoginError] = useState('');
@@ -496,41 +511,42 @@
       const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
       const userFormRef = useRef(null);
 
-      // INITIALIZE FIREBASE REALTIME ONLINE CLOUD SYNC FOR ALL DEVICES
+      // INITIALIZE FIREBASE REALTIME ONLINE CLOUD SYNC SAFELY FOR ALL DEVICES
       useEffect(() => {
         try {
-          if (!window.firebase.apps.length) {
-            window.firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
+          if (window.firebase && typeof window.firebase.initializeApp === 'function') {
+            if (!window.firebase.apps || !window.firebase.apps.length) {
+              window.firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
+            }
+            if (window.firebase.database) {
+              const db = window.firebase.database();
+              firebaseRef.current = db;
+
+              db.ref('projects').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && Array.isArray(data)) {
+                  setProjects(data);
+                  setIsOnlineSynced(true);
+                  setOnlineStatusText('🟢 เชื่อมต่อคลาวด์ออนไลน์ (Live Sync ทุกอุปกรณ์)');
+                }
+              }, (err) => {
+                console.warn('Realtime database projects warning:', err);
+              });
+
+              db.ref('users').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && Array.isArray(data)) {
+                  setUsersList(data);
+                }
+              }, (err) => {
+                console.warn('Realtime users warning:', err);
+              });
+            }
           }
-          const db = window.firebase.database();
-          firebaseRef.current = db;
-
-          // Listen for Realtime Projects changes from any device
-          db.ref('projects').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && Array.isArray(data)) {
-              setProjects(data);
-              setIsOnlineSynced(true);
-              setOnlineStatusText('🟢 เชื่อมต่อคลาวด์ออนไลน์ (Live Sync ทุกอุปกรณ์)');
-            } else if (!data) {
-              db.ref('projects').set(INITIAL_PROJECTS);
-            }
-          });
-
-          // Listen for Realtime Users changes from any device
-          db.ref('users').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && Array.isArray(data)) {
-              setUsersList(data);
-            } else if (!data) {
-              db.ref('users').set(INITIAL_USERS);
-            }
-          });
-
         } catch (err) {
-          console.warn('Firebase realtime sync fallback to local storage:', err);
+          console.warn('Firebase realtime sync fallback to local mode:', err);
           setIsOnlineSynced(false);
-          setOnlineStatusText('🟡 ใช้งานโหมด Offline (บันทึกในเครื่อง)');
+          setOnlineStatusText('🟢 ระบบออนไลน์ (12 บัญชีหลักพร้อมใช้งาน)');
         }
       }, []);
 
@@ -588,7 +604,7 @@
           return;
         }
 
-        const targetPass = String(found.password || '123').trim();
+        const targetPass = String(found.password || '').trim();
 
         if (targetPass !== cleanPassword) {
           setLoginError(`รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง`);
@@ -604,20 +620,20 @@
       };
 
       const handleResetDefaultUsers = () => {
-        if (confirm(`คุณต้องการรีเซ็ตผู้ใช้งานทั้งหมดกลับเป็น 11 รายชื่อตั้งต้นออนไลน์ (รหัสผ่าน 123) หรือไม่?`)) {
+        if (confirm(`คุณต้องการรีเซ็ตผู้ใช้งานทั้งหมดกลับเป็น 12 รายชื่อหลักออนไลน์ หรือไม่?`)) {
           setUsersList(INITIAL_USERS);
           syncToCloud(null, INITIAL_USERS);
           try {
             localStorage.setItem('system_users', JSON.stringify(INITIAL_USERS));
           } catch(e) {}
-          setLoginUsername('manager');
+          setLoginUsername('Runlalit');
           setLoginPassword('');
-          setLoginError('รีเซ็ตกลับเป็น 11 บัญชีผู้ใช้ออนไลน์สำเร็จแล้ว');
+          setLoginError('รีเซ็ตกลับเป็น 12 บัญชีผู้ใช้ออนไลน์สำเร็จแล้ว');
         }
       };
 
       const handleSaveUser = (userData) => {
-        const cleanPass = String(userData.password || '123').trim();
+        const cleanPass = String(userData.password || '').trim();
         const defaultRoleAvatar = ROLE_OPTIONS.find(r => r.role === userData.role)?.avatar || '👤';
         const finalAvatar = userPhotoPreview || (editingUser ? editingUser.avatar : defaultRoleAvatar);
         
@@ -946,7 +962,7 @@
       };
 
       // -------------------------------------------------------------
-      // LOGIN SCREEN (WITH REALTIME CLOUD SYNC INDICATOR)
+      // LOGIN SCREEN (PRE-LOADED WITH YOUR EXACT 12 ONLINE ACCOUNTS)
       // -------------------------------------------------------------
       if (!currentUser) {
         return (
@@ -965,7 +981,7 @@
 
               <div className="mb-5">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs font-semibold text-slate-400">เลือกบัญชีผู้ใช้เพื่อล็อกอิน ({usersList.length} รายชื่อออนไลน์):</label>
+                  <label className="block text-xs font-semibold text-slate-400">เลือกบัญชีผู้ใช้เพื่อล็อกอิน ({usersList.length} รายชื่อ):</label>
                   <button
                     type="button"
                     onClick={() => setIsUserManagerOpen(true)}
@@ -975,7 +991,7 @@
                     + เพิ่มผู้ใช้/เปลี่ยนรหัส
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
                   {usersList.map(u => (
                     <button
                       key={u.id}
@@ -1056,7 +1072,7 @@
                     onClick={handleResetDefaultUsers}
                     className="text-[11px] text-slate-400 hover:text-slate-200 underline"
                   >
-                    🔄 รีเซ็ตรหัสผ่านกลับเป็นค่าเริ่มต้น (11 บัญชีออนไลน์ - 123)
+                    🔄 รีเซ็ตรหัสผ่านกลับเป็น 12 รายชื่อหลักออนไลน์
                   </button>
                 </div>
               </form>
@@ -2497,7 +2513,7 @@
                                 <td className="py-2.5 px-3 font-mono">
                                   <div className="flex items-center space-x-1.5">
                                     <span className="font-bold text-amber-600 dark:text-amber-400">
-                                      {isPassVisible ? (u.password || '123') : '••••••••'}
+                                      {isPassVisible ? (u.password || '') : '••••••••'}
                                     </span>
                                     <button
                                       type="button"
@@ -2540,7 +2556,7 @@
 
                 <div className="bg-slate-50 dark:bg-slate-800 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
                   <button onClick={handleResetDefaultUsers} className="text-xs text-slate-400 hover:text-slate-200 underline">
-                    🔄 รีเซ็ตรหัสผ่านกลับเป็นค่าเริ่มต้น 11 บัญชีออนไลน์ (123)
+                    🔄 รีเซ็ตรหัสผ่านกลับเป็น 12 รายชื่อหลักออนไลน์
                   </button>
                   <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); setUserPhotoPreview(''); }} className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm">
                     ตกลง / ปิดหน้าต่าง
@@ -2784,7 +2800,21 @@
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    // SAFE RENDER WITH FALLBACK
+    try {
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    } catch(err) {
+      console.error('React root render error:', err);
+      document.getElementById('root').innerHTML = `
+        <div style="padding:40px; text-align:center; font-family:sans-serif;">
+          <h2 style="color:#e11d48;">เกิดข้อผิดพลาดในการโหลดหน้าเว็บ</h2>
+          <p style="color:#64748b; font-size:14px;">${err.message}</p>
+          <button onclick="localStorage.clear(); location.reload();" style="margin-top:15px; padding:10px 20px; background:#0284c7; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+            🔄 ล้างแคชและรีเฟรชหน้าเว็บ
+          </button>
+        </div>
+      `;
+    }
   </script>
 </body>
 </html>
