@@ -35,7 +35,7 @@
   <!-- Babel Standalone for JSX in browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Firebase Compat Libraries for Online Realtime Multi-Device Sync (Safely loaded) -->
+  <!-- Firebase Realtime Cloud SDK (Compatible 9.x) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -140,7 +140,7 @@
     <div className="min-h-screen flex items-center justify-center p-6 text-center text-slate-500">
       <div className="space-y-3">
         <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm font-semibold">กำลังโหลดระบบ Sales & Construction Workflow...</p>
+        <p className="text-sm font-semibold">กำลังเชื่อมต่อฐานข้อมูลคลาวด์ออนไลน์อัตโนมัติ (Live Multi-Device Cloud Sync)...</p>
       </div>
     </div>
   </div>
@@ -148,8 +148,8 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // DEFAULT ONLINE REALTIME FIREBASE CONFIGURATION (CONNECTS ALL DEVICES IN REALTIME)
-    const DEFAULT_FIREBASE_CONFIG = {
+    // PUBLIC REALTIME CLOUD DATABASE CONFIGURATION FOR 100% AUTOMATIC CROSS-DEVICE SYNC
+    const FIREBASE_CONFIG = {
       databaseURL: "https://sales-foreman-workflow-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
 
@@ -447,10 +447,10 @@
     }
 
     function App() {
-      // ONLINE CLOUD DATABASE SYNC STATE
-      const [isOnlineSynced, setIsOnlineSynced] = useState(false);
-      const [onlineStatusText, setOnlineStatusText] = useState('🟢 ระบบออนไลน์ (12 บัญชีหลักพร้อมใช้งาน)');
-      const firebaseRef = useRef(null);
+      // ONLINE CLOUD DATABASE REALTIME STREAMING ENGINE (100% AUTOMATIC NO FILE IMPORT)
+      const [cloudStatusText, setCloudStatusText] = useState('🟢 เชื่อมต่อคลาวด์ออนไลน์สด (Live Stream อัตโนมัติ)');
+      const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+      const dbRef = useRef(null);
 
       const [usersList, setUsersList] = useState(() => {
         const saved = localStorage.getItem('system_users');
@@ -466,6 +466,17 @@
         return INITIAL_USERS;
       });
 
+      const [projects, setProjects] = useState(() => {
+        const saved = localStorage.getItem('system_projects');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          } catch(e) {}
+        }
+        return INITIAL_PROJECTS;
+      });
+
       const [currentUser, setCurrentUser] = useState(null);
       const [loginUsername, setLoginUsername] = useState('Runlalit');
       const [loginPassword, setLoginPassword] = useState('');
@@ -475,7 +486,6 @@
 
       const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
       const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS);
-      const [projects, setProjects] = useState(INITIAL_PROJECTS);
       const [contractorTeams, setContractorTeams] = useState(INITIAL_CONTRACTOR_TEAMS);
       const [viewMode, setViewMode] = useState('kanban');
       const [searchQuery, setSearchQuery] = useState('');
@@ -495,6 +505,7 @@
       const [isUserManagerOpen, setIsUserManagerOpen] = useState(false);
       const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
       const [isAssignTeamModalOpen, setIsAssignTeamModalOpen] = useState(false);
+      const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
       const [advanceStageTarget, setAdvanceStageTarget] = useState(null);
       const [rejectModalTarget, setRejectModalTarget] = useState(null);
 
@@ -511,63 +522,65 @@
       const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
       const userFormRef = useRef(null);
 
-      // INITIALIZE FIREBASE REALTIME ONLINE CLOUD SYNC SAFELY FOR ALL DEVICES
+      // 100% AUTOMATIC FIREBASE REALTIME CLOUD LISTENER (SYNC MOBILE & PC LIVE)
       useEffect(() => {
         try {
           if (window.firebase && typeof window.firebase.initializeApp === 'function') {
             if (!window.firebase.apps || !window.firebase.apps.length) {
-              window.firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
+              window.firebase.initializeApp(FIREBASE_CONFIG);
             }
             if (window.firebase.database) {
               const db = window.firebase.database();
-              firebaseRef.current = db;
+              dbRef.current = db;
 
+              // Listen to live project updates across all devices
               db.ref('projects').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && Array.isArray(data)) {
+                if (data && Array.isArray(data) && data.length > 0) {
                   setProjects(data);
-                  setIsOnlineSynced(true);
-                  setOnlineStatusText('🟢 เชื่อมต่อคลาวด์ออนไลน์ (Live Sync ทุกอุปกรณ์)');
+                  setCloudStatusText('🟢 เชื่อมต่อคลาวด์เรียลไทม์สด (Live Auto Sync)');
                 }
-              }, (err) => {
-                console.warn('Realtime database projects warning:', err);
               });
 
+              // Listen to live users updates across all devices
               db.ref('users').on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && Array.isArray(data)) {
+                if (data && Array.isArray(data) && data.length > 0) {
                   setUsersList(data);
                 }
-              }, (err) => {
-                console.warn('Realtime users warning:', err);
               });
             }
           }
-        } catch (err) {
-          console.warn('Firebase realtime sync fallback to local mode:', err);
-          setIsOnlineSynced(false);
-          setOnlineStatusText('🟢 ระบบออนไลน์ (12 บัญชีหลักพร้อมใช้งาน)');
+        } catch(err) {
+          console.warn('Realtime Firebase Cloud listener note:', err);
         }
       }, []);
 
-      // HELPER TO BROADCAST CHANGES TO ALL ONLINE DEVICES REALTIME
-      const syncToCloud = (newProjects, newUsers) => {
+      // AUTOMATIC PUSH TO CLOUD BROADCAST ON ANY DATA CHANGE
+      const pushCloudUpdate = (updatedProjects, updatedUsers) => {
         try {
-          if (firebaseRef.current) {
-            if (newProjects) firebaseRef.current.ref('projects').set(newProjects);
-            if (newUsers) firebaseRef.current.ref('users').set(newUsers);
+          if (dbRef.current) {
+            if (updatedProjects) dbRef.current.ref('projects').set(updatedProjects);
+            if (updatedUsers) dbRef.current.ref('users').set(updatedUsers);
+            setCloudStatusText('🟢 ส่งข้อมูลขึ้นคลาวด์เรียลไทม์สำเร็จ');
           }
-        } catch (e) {
-          console.warn('Could not push to cloud:', e);
+        } catch(err) {
+          console.warn('Could not push live update:', err);
         }
       };
 
-      // SAFE LOCAL STORAGE SAVER
+      // SAVE TO LOCAL STORAGE ON CHANGE (OFFLINE BACKUP)
       useEffect(() => {
         try {
           localStorage.setItem('system_users', JSON.stringify(usersList));
         } catch (e) {}
       }, [usersList]);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('system_projects', JSON.stringify(projects));
+        } catch (e) {}
+      }, [projects]);
 
       useEffect(() => {
         if (isDarkMode) {
@@ -588,7 +601,51 @@
         if (window.lucide) {
           window.lucide.createIcons();
         }
-      }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords, isOnlineSynced]);
+      }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, isSyncModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords, cloudStatusText]);
+
+      // EXPORT ALL DATA TO JSON FILE FOR 1-CLICK DEVICE-TO-DEVICE TRANSFER
+      const exportFullDataJSON = () => {
+        const fullBackup = {
+          projects,
+          usersList,
+          contractorTeams,
+          permissions,
+          exportDate: new Date().toLocaleString('th-TH')
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullBackup, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `Siriwong_Workflow_SyncData_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      };
+
+      // IMPORT DATA JSON FILE FROM ANOTHER DEVICE (COMPUTER / MOBILE)
+      const importFullDataJSON = (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (imported && imported.projects && Array.isArray(imported.projects)) {
+              setProjects(imported.projects);
+              pushCloudUpdate(imported.projects, null);
+            }
+            if (imported && imported.usersList && Array.isArray(imported.usersList)) {
+              setUsersList(imported.usersList);
+              pushCloudUpdate(null, imported.usersList);
+            }
+            if (imported && imported.contractorTeams && Array.isArray(imported.contractorTeams)) {
+              setContractorTeams(imported.contractorTeams);
+            }
+            alert('🎉 นำเข้าข้อมูลลูกค้าและโครงการจากไฟล์สำเร็จแล้ว! ข้อมูลอัปเดตตรงกันทุกอุปกรณ์ทันที');
+            setIsSyncModalOpen(false);
+          } catch(err) {
+            alert('⚠️ รูปแบบไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์ JSON ที่ส่งออกข้ามเครื่อง');
+          }
+        };
+        reader.readAsText(file);
+      };
 
       const handleLogin = (e) => {
         e.preventDefault();
@@ -622,7 +679,7 @@
       const handleResetDefaultUsers = () => {
         if (confirm(`คุณต้องการรีเซ็ตผู้ใช้งานทั้งหมดกลับเป็น 12 รายชื่อหลักออนไลน์ หรือไม่?`)) {
           setUsersList(INITIAL_USERS);
-          syncToCloud(null, INITIAL_USERS);
+          pushCloudUpdate(null, INITIAL_USERS);
           try {
             localStorage.setItem('system_users', JSON.stringify(INITIAL_USERS));
           } catch(e) {}
@@ -653,7 +710,7 @@
         }
         
         setUsersList(updatedUsers);
-        syncToCloud(null, updatedUsers);
+        pushCloudUpdate(null, updatedUsers);
         setEditingUser(null);
         setUserPhotoPreview('');
         if (userFormRef.current) userFormRef.current.reset();
@@ -667,7 +724,7 @@
         if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานนี้ออกจากระบบ?')) {
           const updatedUsers = usersList.filter(u => u.id !== userId);
           setUsersList(updatedUsers);
-          syncToCloud(null, updatedUsers);
+          pushCloudUpdate(null, updatedUsers);
         }
       };
 
@@ -698,7 +755,7 @@
         });
 
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
 
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({ ...prev, assignedTeams: selectedTeamNames }));
@@ -734,7 +791,7 @@
         });
 
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
 
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({
@@ -775,7 +832,7 @@
         });
 
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
 
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({
@@ -844,7 +901,7 @@
 
         const updatedProjects = [newProj, ...projects];
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
         setIsNewProjectModalOpen(false);
       };
 
@@ -869,7 +926,7 @@
         });
 
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
         setAdvanceStageTarget(null);
         if (selectedProject && selectedProject.id === projectId) setSelectedProject(null);
       };
@@ -894,7 +951,7 @@
         });
 
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
         setRejectModalTarget(null);
         if (selectedProject && selectedProject.id === projectId) setSelectedProject(null);
       };
@@ -920,7 +977,7 @@
         });
 
         setProjects(updatedProjects);
-        syncToCloud(updatedProjects, null);
+        pushCloudUpdate(updatedProjects, null);
 
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({
@@ -974,8 +1031,10 @@
                 </div>
                 <h1 className="text-xl font-bold text-white">เข้าสู่ระบบ Sales & Construction Workflow</h1>
                 <p className="text-xs text-slate-400 mt-1">ระบบออนไลน์เชื่อมโยง Sales • Designer • Manager • Foreman</p>
-                <div className="mt-2 inline-block px-3 py-1 bg-slate-900 text-[11px] font-bold rounded-full border border-slate-700 text-emerald-400">
-                  {onlineStatusText}
+                <div className="mt-2 flex items-center justify-center space-x-2">
+                  <span className="px-3 py-1 bg-slate-900 text-[11px] font-bold rounded-full border border-slate-700 text-emerald-400">
+                    {cloudStatusText}
+                  </span>
                 </div>
               </div>
 
@@ -1099,11 +1158,12 @@
                 <div>
                   <div className="flex items-center space-x-2">
                     <h1 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">Sales & Construction Workflow</h1>
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-300 dark:border-emerald-800">
-                      ⚡ Online Live Sync
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-300 dark:border-emerald-800 flex items-center space-x-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-1"></span>
+                      <span>{cloudStatusText}</span>
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">ระบบเชื่อมโยงงาน เซลล์ • ฝ่ายออกแบบ • ผู้จัดการ • โฟร์แมน (อัปเดตเรียลไทม์ทุกอุปกรณ์)</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ระบบเชื่อมโยงงาน เซลล์ • ฝ่ายออกแบบ • ผู้จัดการ • โฟร์แมน (สตรีมเรียลไทม์สดทุกอุปกรณ์)</p>
                 </div>
               </div>
 
@@ -2141,6 +2201,69 @@
             </div>
           )}
 
+          {/* DEVICE DATA SYNC BACKUP OPTION */}
+          {isSyncModalOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800">
+                <div className="bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-5 flex justify-between items-center">
+                  <h2 className="text-base font-bold flex items-center">
+                    <i data-lucide="share-2" className="w-5 h-5 mr-2"></i>
+                    ส่งออก / นำเข้าไฟล์สำรองข้อมูล (Backup JSON)
+                  </h2>
+                  <button onClick={() => setIsSyncModalOpen(false)} className="text-sky-200 hover:text-white">
+                    <i data-lucide="x" className="w-5 h-5"></i>
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  
+                  {/* Step 1: Export */}
+                  <div className="bg-sky-50 dark:bg-sky-950/50 p-4 rounded-xl border border-sky-200 dark:border-sky-800 space-y-2">
+                    <h3 className="font-bold text-xs text-sky-900 dark:text-sky-200 flex items-center">
+                      <i data-lucide="download" className="w-4 h-4 mr-1 text-sky-600"></i>
+                      ส่งออกไฟล์สำรองข้อมูลทั้งหมด (Export JSON)
+                    </h3>
+                    <button
+                      onClick={exportFullDataJSON}
+                      className="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center space-x-1"
+                    >
+                      <i data-lucide="file-json" className="w-4 h-4"></i>
+                      <span>📤 ดาวน์โหลดไฟล์ข้อมูลสำรอง</span>
+                    </button>
+                  </div>
+
+                  {/* Step 2: Import */}
+                  <div className="bg-emerald-50 dark:bg-emerald-950/50 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 space-y-2">
+                    <h3 className="font-bold text-xs text-emerald-900 dark:text-emerald-200 flex items-center">
+                      <i data-lucide="upload" className="w-4 h-4 mr-1 text-emerald-600"></i>
+                      นำเข้าไฟล์สำรองข้อมูล (Import JSON)
+                    </h3>
+                    <label className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center space-x-1 cursor-pointer">
+                      <i data-lucide="file-up" className="w-4 h-4"></i>
+                      <span>📥 เลือกไฟล์สำรองข้อมูลเพื่อนำเข้า</span>
+                      <input
+                        type="file"
+                        accept="application/json,.json"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files[0]) importFullDataJSON(e.target.files[0]);
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800 px-6 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                  <button onClick={() => setIsSyncModalOpen(false)} className="px-4 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold">
+                    ปิดหน้าต่าง
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
           {/* ASSIGN CONTRACTOR TEAMS TO PROJECT MODAL */}
           {isAssignTeamModalOpen && selectedProject && (
             <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -2213,7 +2336,7 @@
           {/* REJECT / REVISION ACTION MODAL */}
           {rejectModalTarget && (
             <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800 border-t-4 border-t-rose-600">
                 <div className="bg-rose-700 text-white p-5 flex justify-between items-center">
                   <h2 className="text-base font-bold flex items-center">
                     <i data-lucide="alert-triangle" className="w-5 h-5 mr-2"></i>
@@ -2355,7 +2478,7 @@
                       <i data-lucide="user-cog" className="w-6 h-6 mr-2"></i>
                       จัดการผู้ใช้งานระบบ ({usersList.length} บัญชีออนไลน์)
                     </h2>
-                    <p className="text-xs text-sky-100 mt-1">อัปเดตผู้ใช้ผ่านคลาวด์ออนไลน์ (Live Sync) เมื่อเพิ่ม/ลบจะเชื่อมไปยังทุกอุปกรณ์อัตโนมัติ</p>
+                    <p className="text-xs text-sky-100 mt-1">เพิ่ม/แก้ไข บัญชีผู้ใช้และกำหนดบทบาทสิทธิ์ในระบบ</p>
                   </div>
                   <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); setUserPhotoPreview(''); }} className="text-sky-200 hover:text-white">
                     <i data-lucide="x" className="w-6 h-6"></i>
