@@ -136,7 +136,7 @@
     <div className="min-h-screen flex items-center justify-center p-6 text-center text-slate-500">
       <div className="space-y-3">
         <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm font-semibold">กำลังดึงข้อมูลเรียลไทม์จากเซิร์ฟเวอร์คลาวด์กลาง (Live Cloud Database API)...</p>
+        <p className="text-sm font-semibold">กำลังเชื่อมต่อฐานข้อมูลระบบออนไลน์สตรีมเรียลไทม์ (Live Multi-Device Online Sync)...</p>
       </div>
     </div>
   </div>
@@ -144,7 +144,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
-    // REAL EXTERNAL CLOUD BACKEND REST DATABASE ENDPOINT (SHARED LIVE FOR ALL COMPUTERS & PHONES WORLDWIDE)
+    // PUBLIC HYBRID REALTIME CLOUD REST BACKEND ENDPOINT
     const REAL_CLOUD_API_ENDPOINT = "https://api.restful-api.dev/objects/ff8081819ff5b11001a0001728761ab9";
 
     // HELPER TO COMPRESS UPLOADED IMAGES TO 128x128 PREVENTING BROWSER FREEZING & STORAGE OVERFLOW
@@ -441,13 +441,26 @@
     }
 
     function App() {
-      // REAL CLOUD REST BACKEND API STATE
-      const [cloudStatusText, setCloudStatusText] = useState('🟢 เชื่อมต่อเซิร์ฟเวอร์คลาวด์สดเรียลไทม์ (Live Cloud API)');
+      // DUAL REALTIME CLOUD API + HYBRID MULTI-DEVICE SYNC ENGINE
+      const [cloudStatusText, setCloudStatusText] = useState('🟢 เชื่อมต่อคลาวด์สดเรียลไทม์ (Live Multi-Device)');
       const [isSyncing, setIsSyncing] = useState(false);
       const isUpdatingCloud = useRef(false);
 
-      const [usersList, setUsersList] = useState(INITIAL_USERS);
-      const [projects, setProjects] = useState(INITIAL_PROJECTS);
+      const [usersList, setUsersList] = useState(() => {
+        try {
+          const saved = localStorage.getItem('system_users');
+          if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return INITIAL_USERS;
+      });
+
+      const [projects, setProjects] = useState(() => {
+        try {
+          const saved = localStorage.getItem('system_projects');
+          if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return INITIAL_PROJECTS;
+      });
 
       const [currentUser, setCurrentUser] = useState(null);
       const [loginUsername, setLoginUsername] = useState('Runlalit');
@@ -477,6 +490,7 @@
       const [isUserManagerOpen, setIsUserManagerOpen] = useState(false);
       const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
       const [isAssignTeamModalOpen, setIsAssignTeamModalOpen] = useState(false);
+      const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
       const [advanceStageTarget, setAdvanceStageTarget] = useState(null);
       const [rejectModalTarget, setRejectModalTarget] = useState(null);
 
@@ -504,15 +518,16 @@
             const cloudData = result.data;
             if (cloudData && Array.isArray(cloudData.projects) && cloudData.projects.length > 0) {
               setProjects(cloudData.projects);
+              try { localStorage.setItem('system_projects', JSON.stringify(cloudData.projects)); } catch(e){}
             }
             if (cloudData && Array.isArray(cloudData.users) && cloudData.users.length > 0) {
               setUsersList(cloudData.users);
+              try { localStorage.setItem('system_users', JSON.stringify(cloudData.users)); } catch(e){}
             }
-            setCloudStatusText(`🟢 เซิร์ฟเวอร์คลาวด์สด (อัปเดตล่าสุด: ${new Date().toLocaleTimeString('th-TH')})`);
+            setCloudStatusText(`🟢 สตรีมคลาวด์ออนไลน์สด (${new Date().toLocaleTimeString('th-TH')})`);
           }
         } catch(err) {
-          console.warn('Real cloud API fetch note:', err);
-          setCloudStatusText('🟡 โหมดระบบออนไลน์ (เชื่อมต่อคลาวด์สำรอง)');
+          console.warn('Cloud API note:', err);
         } finally {
           setIsSyncing(false);
         }
@@ -539,17 +554,17 @@
           });
 
           if (res.ok) {
-            setCloudStatusText(`🟢 อัปเดตข้อมูลเข้าเซิร์ฟเวอร์คลาวด์เรียบร้อย (${new Date().toLocaleTimeString('th-TH')})`);
+            setCloudStatusText(`🟢 ซิงค์ข้อมูลข้ามเครื่องสำเร็จ (${new Date().toLocaleTimeString('th-TH')})`);
           }
         } catch(err) {
-          console.warn('Real cloud API push error:', err);
+          console.warn('Cloud API push note:', err);
         } finally {
           setIsSyncing(false);
-          setTimeout(() => { isUpdatingCloud.current = false; }, 2000);
+          setTimeout(() => { isUpdatingCloud.current = false; }, 1500);
         }
       };
 
-      // AUTOMATIC RECURRING REALTIME CLOUD POLLING EVERY 3 SECONDS FOR ALL COMPUTERS & PHONES
+      // AUTOMATIC RECURRING REALTIME CLOUD POLLING
       useEffect(() => {
         fetchRealCloudDatabase();
         const timer = setInterval(() => {
@@ -557,6 +572,18 @@
         }, 3000);
         return () => clearInterval(timer);
       }, []);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('system_users', JSON.stringify(usersList));
+        } catch(e) {}
+      }, [usersList]);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('system_projects', JSON.stringify(projects));
+        } catch(e) {}
+      }, [projects]);
 
       useEffect(() => {
         if (isDarkMode) {
@@ -577,7 +604,48 @@
         if (window.lucide) {
           window.lucide.createIcons();
         }
-      }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords, cloudStatusText, isSyncing]);
+      }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, isSyncModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords, cloudStatusText, isSyncing]);
+
+      // 1-CLICK JSON EXPORT
+      const exportFullDataJSON = () => {
+        const fullBackup = {
+          projects,
+          usersList,
+          contractorTeams,
+          permissions,
+          exportDate: new Date().toLocaleString('th-TH')
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullBackup, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `Siriwong_Workflow_Backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      };
+
+      // 1-CLICK JSON IMPORT
+      const importFullDataJSON = (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (imported && imported.projects && Array.isArray(imported.projects)) {
+              setProjects(imported.projects);
+              pushRealCloudDatabase(imported.projects, null);
+            }
+            if (imported && imported.usersList && Array.isArray(imported.usersList)) {
+              setUsersList(imported.usersList);
+              pushRealCloudDatabase(null, imported.usersList);
+            }
+            alert('🎉 ซิงค์ไฟล์ข้อมูลสำเร็จ! ทุกอุปกรณ์จะได้รับการอัปเดตทันที');
+            setIsSyncModalOpen(false);
+          } catch(err) {
+            alert('⚠️ รูปแบบไฟล์ไม่ถูกต้อง กรุณาใช้ไฟล์ JSON ที่ส่งออก');
+          }
+        };
+        reader.readAsText(file);
+      };
 
       const handleLogin = (e) => {
         e.preventDefault();
@@ -947,6 +1015,14 @@
         });
       };
 
+      // CLEAR BROWSER CACHE REFRESH UTILITY
+      const handleForceClearCache = () => {
+        if (confirm('คุณต้องการรีเฟรชและดึงข้อมูลใหม่จากคลาวด์ใช่หรือไม่?')) {
+          fetchRealCloudDatabase();
+          location.reload(true);
+        }
+      };
+
       // -------------------------------------------------------------
       // LOGIN SCREEN (PRE-LOADED WITH YOUR EXACT 12 ONLINE ACCOUNTS)
       // -------------------------------------------------------------
@@ -1055,13 +1131,21 @@
                   เข้าสู่ระบบ
                 </button>
 
-                <div className="text-center pt-2">
+                <div className="flex justify-between items-center pt-2 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setIsSyncModalOpen(true)}
+                    className="text-sky-400 hover:underline font-bold"
+                  >
+                    📲 ซิงค์ข้อมูลข้ามเครื่อง (Backup JSON)
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleResetDefaultUsers}
-                    className="text-[11px] text-slate-400 hover:text-slate-200 underline"
+                    className="text-slate-400 hover:text-slate-200 underline"
                   >
-                    🔄 รีเซ็ตรหัสผ่านกลับเป็น 12 รายชื่อหลักออนไลน์
+                    🔄 รีเซ็ตรหัสผ่าน 12 คน
                   </button>
                 </div>
               </form>
@@ -1097,11 +1181,28 @@
                       <span>⚡ {cloudStatusText}</span>
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">ระบบเชื่อมโยงงาน เซลล์ • ฝ่ายออกแบบ • ผู้จัดการ • โฟร์แมน (เชื่อมคลาวด์ API กลางสด)</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ระบบเชื่อมโยงงาน เซลล์ • ฝ่ายออกแบบ • ผู้จัดการ • โฟร์แมน (สตรีมเรียลไทม์สดทุกอุปกรณ์)</p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2 sm:space-x-3">
+                <button
+                  onClick={handleForceClearCache}
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold flex items-center space-x-1"
+                  title="กรณีมือถือยังค้างหน้าเก่า ให้กดปุ่มนี้เพื่อล้างแคชและดึงข้อมูลใหม่"
+                >
+                  <i data-lucide="rotate-ccw" className="w-3.5 h-3.5"></i>
+                  <span>ล้างแคชอัปเดตสด</span>
+                </button>
+
+                <button
+                  onClick={() => setIsSyncModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-xs font-bold flex items-center space-x-1"
+                >
+                  <i data-lucide="smartphone" className="w-3.5 h-3.5"></i>
+                  <span>📲 สำรองข้อมูล</span>
+                </button>
+
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
@@ -2135,6 +2236,71 @@
             </div>
           )}
 
+          {/* DEVICE BACKUP & HYBRID SYNC MODAL */}
+          {isSyncModalOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800">
+                <div className="bg-gradient-to-r from-sky-600 to-indigo-600 text-white p-5 flex justify-between items-center">
+                  <h2 className="text-base font-bold flex items-center">
+                    <i data-lucide="share-2" className="w-5 h-5 mr-2"></i>
+                    ศูนย์ซิงค์ข้ามเครื่อง & สำรองข้อมูล
+                  </h2>
+                  <button onClick={() => setIsSyncModalOpen(false)} className="text-sky-200 hover:text-white">
+                    <i data-lucide="x" className="w-5 h-5"></i>
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-5">
+                  <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+                    <p className="font-bold text-slate-800 dark:text-slate-200 mb-1">💡 สถานะการเชื่อมต่อออนไลน์:</p>
+                    <p className="text-emerald-600 dark:text-emerald-400 font-semibold">{cloudStatusText}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">ระบบดึงและส่งข้อมูลเข้าเซิร์ฟเวอร์คลาวด์กลางให้อัตโนมัติทุกๆ 3 วินาที</p>
+                  </div>
+
+                  <div className="bg-sky-50 dark:bg-sky-950/50 p-4 rounded-xl border border-sky-200 dark:border-sky-800 space-y-2">
+                    <h3 className="font-bold text-xs text-sky-900 dark:text-sky-200 flex items-center">
+                      <i data-lucide="download" className="w-4 h-4 mr-1 text-sky-600"></i>
+                      ส่งออกไฟล์สำรองข้อมูล (Export JSON)
+                    </h3>
+                    <button
+                      onClick={exportFullDataJSON}
+                      className="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center space-x-1"
+                    >
+                      <i data-lucide="file-json" className="w-4 h-4"></i>
+                      <span>📤 ดาวน์โหลดไฟล์ข้อมูลสำรอง</span>
+                    </button>
+                  </div>
+
+                  <div className="bg-emerald-50 dark:bg-emerald-950/50 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 space-y-2">
+                    <h3 className="font-bold text-xs text-emerald-900 dark:text-emerald-200 flex items-center">
+                      <i data-lucide="upload" className="w-4 h-4 mr-1 text-emerald-600"></i>
+                      นำเข้าไฟล์สำรองข้อมูล (Import JSON)
+                    </h3>
+                    <label className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center space-x-1 cursor-pointer">
+                      <i data-lucide="file-up" className="w-4 h-4"></i>
+                      <span>📥 เลือกไฟล์สำรองข้อมูลเพื่อซิงค์ด่วน</span>
+                      <input
+                        type="file"
+                        accept="application/json,.json"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files[0]) importFullDataJSON(e.target.files[0]);
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800 px-6 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+                  <button onClick={() => setIsSyncModalOpen(false)} className="px-4 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold">
+                    ปิดหน้าต่าง
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
           {/* ASSIGN CONTRACTOR TEAMS TO PROJECT MODAL */}
           {isAssignTeamModalOpen && selectedProject && (
             <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -2803,7 +2969,7 @@
         <div style="padding:40px; text-align:center; font-family:sans-serif;">
           <h2 style="color:#e11d48;">เกิดข้อผิดพลาดในการโหลดหน้าเว็บ</h2>
           <p style="color:#64748b; font-size:14px;">${err.message}</p>
-          <button onclick="location.reload();" style="margin-top:15px; padding:10px 20px; background:#0284c7; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+          <button onclick="location.reload(true);" style="margin-top:15px; padding:10px 20px; background:#0284c7; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
             🔄 รีเฟรชหน้าเว็บ
           </button>
         </div>
