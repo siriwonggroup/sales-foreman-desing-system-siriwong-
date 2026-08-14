@@ -1,0 +1,3 @@
+@echo off
+echo Opening Sales, Designer & Foreman Workflow System...
+start "" "%~dp0index.html"
