@@ -505,6 +505,38 @@
         }
       }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords]);
 
+      // EXPORT & IMPORT ACCOUNTS DATA ACROSS COMPUTERS/DEVICES
+      const handleExportUsersJSON = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(usersList, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `system_users_backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      };
+
+      const handleImportUsersJSON = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const importedUsers = JSON.parse(evt.target.result);
+            if (Array.isArray(importedUsers) && importedUsers.length > 0) {
+              setUsersList(importedUsers);
+              localStorage.setItem('system_users', JSON.stringify(importedUsers));
+              alert(`นำเข้ารายชื่อผู้ใช้สำเร็จแล้วทั้งหมด ${importedUsers.length} บัญชี!`);
+            } else {
+              alert('รูปแบบไฟล์ข้อมูลผู้ใช้ไม่ถูกต้อง');
+            }
+          } catch (err) {
+            alert('เกิดข้อผิดพลาดในการอ่านไฟล์นำเข้า: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+
       const handleLogin = (e) => {
         e.preventDefault();
         setLoginError('');
@@ -515,7 +547,7 @@
         const found = usersList.find(u => String(u.username || '').trim().toLowerCase() === cleanUsername);
         
         if (!found) {
-          setLoginError(`ไม่พบชื่อผู้ใช้ "${loginUsername}" ในระบบ`);
+          setLoginError(`ไม่พบชื่อผู้ใช้ "${loginUsername}" ในเครื่องนี้ (กดปุ่มนำเข้าบัญชีหากสร้างไว้จากเครื่องอื่น)`);
           return;
         }
 
@@ -871,7 +903,7 @@
                     className="text-[11px] font-bold text-sky-400 hover:underline flex items-center"
                   >
                     <i data-lucide="user-plus" className="w-3.5 h-3.5 mr-1"></i>
-                    + เพิ่มผู้ใช้/เปลี่ยนรหัสผ่าน
+                    + เพิ่มผู้ใช้/นำเข้าบัญชี
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
@@ -949,13 +981,19 @@
                   เข้าสู่ระบบ
                 </button>
 
-                <div className="text-center pt-2">
+                <div className="flex justify-between items-center pt-2 text-[11px]">
+                  <label className="text-sky-400 hover:underline cursor-pointer font-semibold flex items-center">
+                    <i data-lucide="upload" className="w-3.5 h-3.5 mr-1"></i>
+                    <span>📤 นำเข้ารายชื่อผู้ใช้จากเครื่องเดิม</span>
+                    <input type="file" accept=".json" onChange={handleImportUsersJSON} className="hidden" />
+                  </label>
+
                   <button
                     type="button"
                     onClick={handleResetDefaultUsers}
-                    className="text-[11px] text-slate-400 hover:text-slate-200 underline"
+                    className="text-slate-400 hover:text-slate-200 underline"
                   >
-                    🔄 รีเซ็ตรหัสผ่านกลับเป็นค่าเริ่มต้น (123)
+                    🔄 รีเซ็ตรหัสผ่าน (123)
                   </button>
                 </div>
               </form>
@@ -2231,9 +2269,9 @@
                   <div>
                     <h2 className="text-xl font-bold flex items-center">
                       <i data-lucide="user-cog" className="w-6 h-6 mr-2"></i>
-                      จัดการผู้ใช้งานและเพิ่มรายชื่อ ({usersList.length} คน)
+                      จัดการผู้ใช้งานและสำรองข้อมูล ({usersList.length} คน)
                     </h2>
-                    <p className="text-xs text-sky-100 mt-1">เพิ่มผู้ใช้ได้ไม่จำกัดจำนวน พร้อมระบบบีบอัดรูปถ่ายอัตโนมัติ ไม่ค้างไม่หน่วง</p>
+                    <p className="text-xs text-sky-100 mt-1">สามารถส่งออกและนำเข้ารายชื่อผู้ใช้ไปยังคอมพิวเตอร์หรือโทรศัพท์เครื่องอื่นได้ใน 1 วินาที</p>
                   </div>
                   <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); setUserPhotoPreview(''); }} className="text-sky-200 hover:text-white">
                     <i data-lucide="x" className="w-6 h-6"></i>
@@ -2242,6 +2280,31 @@
 
                 <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
                   
+                  {/* IMPORT & EXPORT USER ACCOUNTS TOOLBAR */}
+                  <div className="bg-sky-50 dark:bg-sky-950/60 p-3.5 rounded-2xl border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-bold text-sky-900 dark:text-sky-200">ย้ายหรือแชร์บัญชีผู้ใช้งานไปยังเครื่องอื่น (Export & Import):</p>
+                      <p className="text-[10px] text-sky-600 dark:text-sky-400">ส่งออกไฟล์ข้อมูลรายชื่อเพื่อนำไปเปิดในโทรศัพท์หรือคอมพิวเตอร์เครื่องอื่น</p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={handleExportUsersJSON}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1"
+                      >
+                        <i data-lucide="download" className="w-3.5 h-3.5"></i>
+                        <span>📥 ส่งออกรายชื่อผู้ใช้ (Export)</span>
+                      </button>
+
+                      <label className="cursor-pointer px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1">
+                        <i data-lucide="upload" className="w-3.5 h-3.5"></i>
+                        <span>📤 นำเข้าจากไฟล์ (Import)</span>
+                        <input type="file" accept=".json" onChange={handleImportUsersJSON} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+
                   <form
                     ref={userFormRef}
                     onSubmit={(e) => {
