@@ -35,6 +35,10 @@
   <!-- Babel Standalone for JSX in browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+  <!-- Firebase Compat Libraries for Online Realtime Multi-Device Sync -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
 
@@ -137,6 +141,11 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
 
+    // DEFAULT ONLINE REALTIME FIREBASE CONFIGURATION (CONNECTS ALL DEVICES IN REALTIME)
+    const DEFAULT_FIREBASE_CONFIG = {
+      databaseURL: "https://sales-foreman-workflow-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
     // HELPER TO COMPRESS UPLOADED IMAGES TO 128x128 PREVENTING BROWSER FREEZING & STORAGE OVERFLOW
     function compressProfileImage(file, callback) {
       const reader = new FileReader();
@@ -185,11 +194,19 @@
 
     const SAMPLE_PDF_DATA_URI = "data:application/pdf;base64,JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlcyAvQ291bnQgMSAvS2lkcyBbMyAwIFJdPj4KZW5kb2JqCjMgMCBvYmoKPDwvVHlwZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDYxMiA3OTJdIC9Db250ZW50cyA4IDAgUj4+CmVuZG9iago8IDAgb2JqCjw8L0xlbmd0aCA1Mj4+CnN0cmVhbQpCVCAvRjEgMjQgVGYgMTAwIDcwMCBUZCAoU2FtcGxlIFBSRiBEb2N1bWVudCAtIFdvcmtmbG93IFN5c3RlbSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8L1Jvb3QgMSAwIFI+PgolJUVPRg==";
 
+    // DEFAULT EMBEDDED ONLINE SYSTEM USERS (AVAILABLE ON ALL COMPUTERS & PHONES INSTANTLY)
     const INITIAL_USERS = [
       { id: 'usr_mgr', username: 'manager', password: '123', name: 'คุณอนันต์ (ผู้จัดการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '👑', color: 'emerald' },
-      { id: 'usr_sales', username: 'sales', password: '123', name: 'คุณนิภา (เซลล์)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
-      { id: 'usr_designer', username: 'designer', password: '123', name: 'คุณกิตติ (สถาปนิก/ออกแบบ)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
-      { id: 'usr_foreman', username: 'foreman', password: '123', name: 'คุณวิชัย (โฟร์แมน)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' }
+      { id: 'usr_sales1', username: 'sales', password: '123', name: 'คุณนิภา (เซลล์ 1)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_sales2', username: 'sales2', password: '123', name: 'คุณรัตนา (เซลล์ 2)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '💼', color: 'blue' },
+      { id: 'usr_designer1', username: 'designer', password: '123', name: 'คุณกิตติ (สถาปนิก/ออกแบบ 1)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
+      { id: 'usr_designer2', username: 'designer2', password: '123', name: 'คุณภาณุ (นักออกแบบ 3D 2)', role: 'designer', roleName: 'ฝ่ายออกแบบ (Designer)', avatar: '🎨', color: 'purple' },
+      { id: 'usr_foreman1', username: 'foreman', password: '123', name: 'คุณวิชัย (โฟร์แมนหลัก 1)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
+      { id: 'usr_foreman2', username: 'foreman2', password: '123', name: 'คุณเดชา (โฟร์แมนคุมโครงสร้าง 2)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
+      { id: 'usr_foreman3', username: 'foreman3', password: '123', name: 'คุณสมศักดิ์ (โฟร์แมนคุมระบบ 3)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '👷', color: 'amber' },
+      { id: 'usr_admin', username: 'admin', password: '123', name: 'คุณสายชล (ฝ่ายธุรการ)', role: 'manager', roleName: 'ผู้จัดการ (Manager)', avatar: '📋', color: 'emerald' },
+      { id: 'usr_account', username: 'account', password: '123', name: 'คุณประภา (ฝ่ายการเงิน)', role: 'sales', roleName: 'เซลล์ (Sales)', avatar: '📊', color: 'blue' },
+      { id: 'usr_buyer', username: 'buyer', password: '123', name: 'คุณวีระ (ฝ่ายจัดซื้อ)', role: 'foreman', roleName: 'โฟร์แมน (Foreman)', avatar: '📦', color: 'amber' }
     ];
 
     const ROLE_OPTIONS = [
@@ -418,14 +435,18 @@
     }
 
     function App() {
+      // ONLINE CLOUD DATABASE SYNC STATE
+      const [isOnlineSynced, setIsOnlineSynced] = useState(false);
+      const [onlineStatusText, setOnlineStatusText] = useState('กำลังเชื่อมต่อฐานข้อมูลคลาวด์ออนไลน์ (Online Realtime)...');
+      const firebaseRef = useRef(null);
+
       const [usersList, setUsersList] = useState(() => {
         const saved = localStorage.getItem('system_users');
         if (saved) {
           try {
-            return JSON.parse(saved);
-          } catch (e) {
-            return INITIAL_USERS;
-          }
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length >= INITIAL_USERS.length) return parsed;
+          } catch (e) {}
         }
         return INITIAL_USERS;
       });
@@ -475,13 +496,61 @@
       const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
       const userFormRef = useRef(null);
 
-      // SAFE STORAGE SAVER TO PREVENT DOM STORAGE OVERFLOW & FREEZING
+      // INITIALIZE FIREBASE REALTIME ONLINE CLOUD SYNC FOR ALL DEVICES
+      useEffect(() => {
+        try {
+          if (!window.firebase.apps.length) {
+            window.firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);
+          }
+          const db = window.firebase.database();
+          firebaseRef.current = db;
+
+          // Listen for Realtime Projects changes from any device
+          db.ref('projects').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data)) {
+              setProjects(data);
+              setIsOnlineSynced(true);
+              setOnlineStatusText('🟢 เชื่อมต่อคลาวด์ออนไลน์ (Live Sync ทุกอุปกรณ์)');
+            } else if (!data) {
+              db.ref('projects').set(INITIAL_PROJECTS);
+            }
+          });
+
+          // Listen for Realtime Users changes from any device
+          db.ref('users').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data)) {
+              setUsersList(data);
+            } else if (!data) {
+              db.ref('users').set(INITIAL_USERS);
+            }
+          });
+
+        } catch (err) {
+          console.warn('Firebase realtime sync fallback to local storage:', err);
+          setIsOnlineSynced(false);
+          setOnlineStatusText('🟡 ใช้งานโหมด Offline (บันทึกในเครื่อง)');
+        }
+      }, []);
+
+      // HELPER TO BROADCAST CHANGES TO ALL ONLINE DEVICES REALTIME
+      const syncToCloud = (newProjects, newUsers) => {
+        try {
+          if (firebaseRef.current) {
+            if (newProjects) firebaseRef.current.ref('projects').set(newProjects);
+            if (newUsers) firebaseRef.current.ref('users').set(newUsers);
+          }
+        } catch (e) {
+          console.warn('Could not push to cloud:', e);
+        }
+      };
+
+      // SAFE LOCAL STORAGE SAVER
       useEffect(() => {
         try {
           localStorage.setItem('system_users', JSON.stringify(usersList));
-        } catch (e) {
-          console.warn('LocalStorage limit reached. User list kept in memory.', e);
-        }
+        } catch (e) {}
       }, [usersList]);
 
       useEffect(() => {
@@ -503,39 +572,7 @@
         if (window.lucide) {
           window.lucide.createIcons();
         }
-      }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords]);
-
-      // EXPORT & IMPORT ACCOUNTS DATA ACROSS COMPUTERS/DEVICES
-      const handleExportUsersJSON = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(usersList, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `system_users_backup_${new Date().toISOString().split('T')[0]}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-      };
-
-      const handleImportUsersJSON = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          try {
-            const importedUsers = JSON.parse(evt.target.result);
-            if (Array.isArray(importedUsers) && importedUsers.length > 0) {
-              setUsersList(importedUsers);
-              localStorage.setItem('system_users', JSON.stringify(importedUsers));
-              alert(`นำเข้ารายชื่อผู้ใช้สำเร็จแล้วทั้งหมด ${importedUsers.length} บัญชี!`);
-            } else {
-              alert('รูปแบบไฟล์ข้อมูลผู้ใช้ไม่ถูกต้อง');
-            }
-          } catch (err) {
-            alert('เกิดข้อผิดพลาดในการอ่านไฟล์นำเข้า: ' + err.message);
-          }
-        };
-        reader.readAsText(file);
-      };
+      }, [currentUser, usersList.length, projects.length, viewMode, isDarkMode, calendarYear, calendarMonth, selectedProject, previewFile, selectedFolderTab, isRoleManagerOpen, isUserManagerOpen, isAddTeamModalOpen, isAssignTeamModalOpen, advanceStageTarget, rejectModalTarget, editingUser, commentAttachments, replyToId, userPhotoPreview, visiblePasswords, isOnlineSynced]);
 
       const handleLogin = (e) => {
         e.preventDefault();
@@ -547,7 +584,7 @@
         const found = usersList.find(u => String(u.username || '').trim().toLowerCase() === cleanUsername);
         
         if (!found) {
-          setLoginError(`ไม่พบชื่อผู้ใช้ "${loginUsername}" ในเครื่องนี้ (กดปุ่มนำเข้าบัญชีหากสร้างไว้จากเครื่องอื่น)`);
+          setLoginError(`ไม่พบชื่อผู้ใช้ "${loginUsername}" ในระบบ`);
           return;
         }
 
@@ -567,14 +604,15 @@
       };
 
       const handleResetDefaultUsers = () => {
-        if (confirm('คุณต้องการรีเซ็ตผู้ใช้งานและรหัสผ่านทั้งหมดกลับเป็นค่าเริ่มต้น ( manager / 123 ) หรือไม่?')) {
+        if (confirm(`คุณต้องการรีเซ็ตผู้ใช้งานทั้งหมดกลับเป็น 11 รายชื่อตั้งต้นออนไลน์ (รหัสผ่าน 123) หรือไม่?`)) {
           setUsersList(INITIAL_USERS);
+          syncToCloud(null, INITIAL_USERS);
           try {
             localStorage.setItem('system_users', JSON.stringify(INITIAL_USERS));
           } catch(e) {}
           setLoginUsername('manager');
           setLoginPassword('');
-          setLoginError('รีเซ็ตผู้ใช้และรหัสผ่านเรียบร้อยแล้ว');
+          setLoginError('รีเซ็ตกลับเป็น 11 บัญชีผู้ใช้ออนไลน์สำเร็จแล้ว');
         }
       };
 
@@ -583,8 +621,9 @@
         const defaultRoleAvatar = ROLE_OPTIONS.find(r => r.role === userData.role)?.avatar || '👤';
         const finalAvatar = userPhotoPreview || (editingUser ? editingUser.avatar : defaultRoleAvatar);
         
+        let updatedUsers;
         if (editingUser) {
-          setUsersList(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...userData, password: cleanPass, avatar: finalAvatar } : u));
+          updatedUsers = usersList.map(u => u.id === editingUser.id ? { ...u, ...userData, password: cleanPass, avatar: finalAvatar } : u);
         } else {
           const roleObj = ROLE_OPTIONS.find(r => r.role === userData.role);
           const newUser = {
@@ -594,9 +633,11 @@
             ...userData,
             password: cleanPass
           };
-          setUsersList(prev => [...prev, newUser]);
+          updatedUsers = [...usersList, newUser];
         }
         
+        setUsersList(updatedUsers);
+        syncToCloud(null, updatedUsers);
         setEditingUser(null);
         setUserPhotoPreview('');
         if (userFormRef.current) userFormRef.current.reset();
@@ -608,7 +649,9 @@
           return;
         }
         if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานนี้ออกจากระบบ?')) {
-          setUsersList(prev => prev.filter(u => u.id !== userId));
+          const updatedUsers = usersList.filter(u => u.id !== userId);
+          setUsersList(updatedUsers);
+          syncToCloud(null, updatedUsers);
         }
       };
 
@@ -619,7 +662,7 @@
       };
 
       const handleAssignTeamsToProject = (projectId, selectedTeamNames) => {
-        setProjects(prev => prev.map(p => {
+        const updatedProjects = projects.map(p => {
           if (p.id === projectId) {
             return {
               ...p,
@@ -636,7 +679,11 @@
             };
           }
           return p;
-        }));
+        });
+
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
+
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({ ...prev, assignedTeams: selectedTeamNames }));
         }
@@ -662,13 +709,16 @@
           replies: []
         };
 
-        setProjects(prev => prev.map(p => {
+        const updatedProjects = projects.map(p => {
           if (p.id === projectId) {
             const updatedCmts = [newCmt, ...(p.comments || [])];
             return { ...p, comments: updatedCmts };
           }
           return p;
-        }));
+        });
+
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
 
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({
@@ -695,7 +745,7 @@
           text: replyText
         };
 
-        setProjects(prev => prev.map(p => {
+        const updatedProjects = projects.map(p => {
           if (p.id === projectId) {
             const updatedCmts = (p.comments || []).map(c => {
               if (c.id === commentId) {
@@ -706,7 +756,10 @@
             return { ...p, comments: updatedCmts };
           }
           return p;
-        }));
+        });
+
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
 
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({
@@ -772,12 +825,15 @@
           }],
           ...newProjData
         };
-        setProjects([newProj, ...projects]);
+
+        const updatedProjects = [newProj, ...projects];
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
         setIsNewProjectModalOpen(false);
       };
 
       const handleAdvanceStage = (projectId, nextStage, noteText, newFile) => {
-        setProjects(prev => prev.map(p => {
+        const updatedProjects = projects.map(p => {
           if (p.id === projectId) {
             const updatedLogs = [...p.logs, {
               id: 'log_' + Date.now(),
@@ -794,13 +850,16 @@
             };
           }
           return p;
-        }));
+        });
+
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
         setAdvanceStageTarget(null);
         if (selectedProject && selectedProject.id === projectId) setSelectedProject(null);
       };
 
       const handleRejectStage = (projectId, targetStage, reasonText) => {
-        setProjects(prev => prev.map(p => {
+        const updatedProjects = projects.map(p => {
           if (p.id === projectId) {
             const targetStageName = STAGES[targetStage].name;
             const updatedLogs = [...p.logs, {
@@ -816,13 +875,16 @@
             };
           }
           return p;
-        }));
+        });
+
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
         setRejectModalTarget(null);
         if (selectedProject && selectedProject.id === projectId) setSelectedProject(null);
       };
 
       const handleAddAttachment = (projectId, attachment) => {
-        setProjects(prev => prev.map(p => {
+        const updatedProjects = projects.map(p => {
           if (p.id === projectId) {
             return {
               ...p,
@@ -839,7 +901,11 @@
             };
           }
           return p;
-        }));
+        });
+
+        setProjects(updatedProjects);
+        syncToCloud(updatedProjects, null);
+
         if (selectedProject && selectedProject.id === projectId) {
           setSelectedProject(prev => ({
             ...prev,
@@ -880,7 +946,7 @@
       };
 
       // -------------------------------------------------------------
-      // LOGIN SCREEN
+      // LOGIN SCREEN (WITH REALTIME CLOUD SYNC INDICATOR)
       // -------------------------------------------------------------
       if (!currentUser) {
         return (
@@ -891,22 +957,25 @@
                   W
                 </div>
                 <h1 className="text-xl font-bold text-white">เข้าสู่ระบบ Sales & Construction Workflow</h1>
-                <p className="text-xs text-slate-400 mt-1">ระบบบริหารงาน Sales • Designer • Manager • Foreman</p>
+                <p className="text-xs text-slate-400 mt-1">ระบบออนไลน์เชื่อมโยง Sales • Designer • Manager • Foreman</p>
+                <div className="mt-2 inline-block px-3 py-1 bg-slate-900 text-[11px] font-bold rounded-full border border-slate-700 text-emerald-400">
+                  {onlineStatusText}
+                </div>
               </div>
 
               <div className="mb-5">
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs font-semibold text-slate-400">เลือกบัญชีผู้ใช้เพื่อล็อกอิน ({usersList.length} รายชื่อ):</label>
+                  <label className="block text-xs font-semibold text-slate-400">เลือกบัญชีผู้ใช้เพื่อล็อกอิน ({usersList.length} รายชื่อออนไลน์):</label>
                   <button
                     type="button"
                     onClick={() => setIsUserManagerOpen(true)}
                     className="text-[11px] font-bold text-sky-400 hover:underline flex items-center"
                   >
                     <i data-lucide="user-plus" className="w-3.5 h-3.5 mr-1"></i>
-                    + เพิ่มผู้ใช้/นำเข้าบัญชี
+                    + เพิ่มผู้ใช้/เปลี่ยนรหัส
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
                   {usersList.map(u => (
                     <button
                       key={u.id}
@@ -916,13 +985,13 @@
                         setLoginPassword('');
                         setLoginError('');
                       }}
-                      className={`p-2.5 rounded-xl border text-left flex items-center space-x-2 transition relative ${
+                      className={`p-2 rounded-xl border text-left flex items-center space-x-2 transition relative ${
                         loginUsername === u.username
                           ? 'bg-sky-950 border-sky-500 text-white'
                           : 'bg-slate-700/60 border-slate-600 text-slate-300 hover:bg-slate-700'
                       }`}
                     >
-                      <UserAvatar avatar={u.avatar} name={u.name} className="w-9 h-9 rounded-full" />
+                      <UserAvatar avatar={u.avatar} name={u.name} className="w-8 h-8 rounded-full" />
                       <div className="overflow-hidden">
                         <p className="text-xs font-bold truncate">{u.name}</p>
                         <p className="text-[10px] text-slate-400 truncate font-mono">({u.username})</p>
@@ -981,19 +1050,13 @@
                   เข้าสู่ระบบ
                 </button>
 
-                <div className="flex justify-between items-center pt-2 text-[11px]">
-                  <label className="text-sky-400 hover:underline cursor-pointer font-semibold flex items-center">
-                    <i data-lucide="upload" className="w-3.5 h-3.5 mr-1"></i>
-                    <span>📤 นำเข้ารายชื่อผู้ใช้จากเครื่องเดิม</span>
-                    <input type="file" accept=".json" onChange={handleImportUsersJSON} className="hidden" />
-                  </label>
-
+                <div className="text-center pt-2">
                   <button
                     type="button"
                     onClick={handleResetDefaultUsers}
-                    className="text-slate-400 hover:text-slate-200 underline"
+                    className="text-[11px] text-slate-400 hover:text-slate-200 underline"
                   >
-                    🔄 รีเซ็ตรหัสผ่าน (123)
+                    🔄 รีเซ็ตรหัสผ่านกลับเป็นค่าเริ่มต้น (11 บัญชีออนไลน์ - 123)
                   </button>
                 </div>
               </form>
@@ -1018,8 +1081,13 @@
                   W
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">Sales & Construction Workflow</h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">ระบบเชื่อมโยงงาน เซลล์ • ฝ่ายออกแบบ • ผู้จัดการ • โฟร์แมน</p>
+                  <div className="flex items-center space-x-2">
+                    <h1 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">Sales & Construction Workflow</h1>
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-300 dark:border-emerald-800">
+                      ⚡ Online Live Sync
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ระบบเชื่อมโยงงาน เซลล์ • ฝ่ายออกแบบ • ผู้จัดการ • โฟร์แมน (อัปเดตเรียลไทม์ทุกอุปกรณ์)</p>
                 </div>
               </div>
 
@@ -2261,7 +2329,7 @@
             </div>
           )}
 
-          {/* DYNAMIC USER & PROFILE PHOTO MANAGEMENT MODAL (OPTIMIZED HIGH SPEED FOR 100+ USERS) */}
+          {/* DYNAMIC USER & PROFILE PHOTO MANAGEMENT MODAL */}
           {isUserManagerOpen && (
             <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
               <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden animate-modal border border-slate-200 dark:border-slate-800">
@@ -2269,9 +2337,9 @@
                   <div>
                     <h2 className="text-xl font-bold flex items-center">
                       <i data-lucide="user-cog" className="w-6 h-6 mr-2"></i>
-                      จัดการผู้ใช้งานและสำรองข้อมูล ({usersList.length} คน)
+                      จัดการผู้ใช้งานระบบ ({usersList.length} บัญชีออนไลน์)
                     </h2>
-                    <p className="text-xs text-sky-100 mt-1">สามารถส่งออกและนำเข้ารายชื่อผู้ใช้ไปยังคอมพิวเตอร์หรือโทรศัพท์เครื่องอื่นได้ใน 1 วินาที</p>
+                    <p className="text-xs text-sky-100 mt-1">อัปเดตผู้ใช้ผ่านคลาวด์ออนไลน์ (Live Sync) เมื่อเพิ่ม/ลบจะเชื่อมไปยังทุกอุปกรณ์อัตโนมัติ</p>
                   </div>
                   <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); setUserPhotoPreview(''); }} className="text-sky-200 hover:text-white">
                     <i data-lucide="x" className="w-6 h-6"></i>
@@ -2280,31 +2348,6 @@
 
                 <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
                   
-                  {/* IMPORT & EXPORT USER ACCOUNTS TOOLBAR */}
-                  <div className="bg-sky-50 dark:bg-sky-950/60 p-3.5 rounded-2xl border border-sky-200 dark:border-sky-800 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-xs font-bold text-sky-900 dark:text-sky-200">ย้ายหรือแชร์บัญชีผู้ใช้งานไปยังเครื่องอื่น (Export & Import):</p>
-                      <p className="text-[10px] text-sky-600 dark:text-sky-400">ส่งออกไฟล์ข้อมูลรายชื่อเพื่อนำไปเปิดในโทรศัพท์หรือคอมพิวเตอร์เครื่องอื่น</p>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={handleExportUsersJSON}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1"
-                      >
-                        <i data-lucide="download" className="w-3.5 h-3.5"></i>
-                        <span>📥 ส่งออกรายชื่อผู้ใช้ (Export)</span>
-                      </button>
-
-                      <label className="cursor-pointer px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1">
-                        <i data-lucide="upload" className="w-3.5 h-3.5"></i>
-                        <span>📤 นำเข้าจากไฟล์ (Import)</span>
-                        <input type="file" accept=".json" onChange={handleImportUsersJSON} className="hidden" />
-                      </label>
-                    </div>
-                  </div>
-
                   <form
                     ref={userFormRef}
                     onSubmit={(e) => {
@@ -2389,7 +2432,7 @@
                             </button>
                           )}
                         </div>
-                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">⚡ ระบบบีบอัดภาพอัตโนมัติ เพื่อให้เพิ่มผู้ใช้งานได้ไม่จำกัดและไม่ค้าง</p>
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">⚡ บีบอัดรูปถ่ายภาพโปรไฟล์อัตโนมัติ</p>
                       </div>
                     </div>
 
@@ -2497,7 +2540,7 @@
 
                 <div className="bg-slate-50 dark:bg-slate-800 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
                   <button onClick={handleResetDefaultUsers} className="text-xs text-slate-400 hover:text-slate-200 underline">
-                    🔄 รีเซ็ตรหัสผ่านกลับเป็นค่าเริ่มต้น (123)
+                    🔄 รีเซ็ตรหัสผ่านกลับเป็นค่าเริ่มต้น 11 บัญชีออนไลน์ (123)
                   </button>
                   <button onClick={() => { setIsUserManagerOpen(false); setEditingUser(null); setUserPhotoPreview(''); }} className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm">
                     ตกลง / ปิดหน้าต่าง
